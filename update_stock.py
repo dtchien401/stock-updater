@@ -5,8 +5,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 from vnstock import Quote
 
-# đọc secret từ github
-service_account_info = json.loads(os.environ['GOOGLE_SERVICE_ACCOUNT'])
+service_account_info = json.loads(os.environ["GOOGLE_SERVICE_ACCOUNT"])
 
 scopes = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -14,22 +13,16 @@ scopes = [
 ]
 
 creds = Credentials.from_service_account_info(service_account_info, scopes=scopes)
-
 gc = gspread.authorize(creds)
 
-# mở google sheet
-sheet = gc.open("Data Cp").sheet1
+SPREADSHEET_ID = "1g3TUiH4ReFruGBbkhbs2DFofFwZoWMcDzqlloYv3VfQ"
+sheet = gc.open_by_key(SPREADSHEET_ID).sheet1
 
-symbols = ["HPG","VCG","VPB","POW","SZC","PVD","PLX","VIC"]
+symbols = ["HPG", "VCG", "VPB", "POW", "SZC", "PVD", "PLX", "VIC"]
 
 for symbol in symbols:
-
     quote = Quote(symbol=symbol, source="KBS")
-
-    df = quote.history(
-        start="2024-01-01",
-        interval="1D"
-    )
+    df = quote.history(start="2024-01-01", interval="1D")
 
     last = df.tail(1)
 
@@ -44,5 +37,4 @@ for symbol in symbols:
     ]
 
     sheet.append_row(row)
-
     print("Updated:", symbol)
