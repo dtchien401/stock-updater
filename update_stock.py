@@ -20,7 +20,18 @@ gc = gspread.authorize(creds)
 SPREADSHEET_ID = "1g3TUiH4ReFruGBbkhbs2DFofFwZoWMcDzqlloYv3VfQ"
 sheet = gc.open_by_key(SPREADSHEET_ID).sheet1
 
-symbols = ["HPG", "VCG", "VPB", "POW", "SZC", "PVD", "PLX", "VIC"]
+symbols = ["HPG", "VCG", "VPB", "POW", "SZC", "PVD", "MBB", "GVR", "GMD", "PNJ", "E1VFVN30", "FUEVFVND"]
+
+# Đọc toàn bộ dữ liệu hiện có để tạo map: (symbol, date) -> row number
+all_values = sheet.get_all_values()
+
+existing_map = {}
+if len(all_values) > 1:
+    for idx, row in enumerate(all_values[1:], start=2):  # start=2 vì dòng 1 là header
+        if len(row) >= 2:
+            symbol_key = str(row[0]).strip().upper()
+            date_key = str(row[1]).strip()[:10]
+            existing_map[(symbol_key, date_key)] = idx
 
 for symbol in symbols:
     quote = Quote(symbol=symbol, source="KBS")
@@ -32,9 +43,11 @@ for symbol in symbols:
 
     last = df.tail(1).iloc[0]
 
+    date_value = str(last["time"])[:10]
+
     row = [
         str(symbol),
-        str(last["time"])[:10],
+        date_value,
         float(last["open"]),
         float(last["high"]),
         float(last["low"]),
@@ -42,5 +55,12 @@ for symbol in symbols:
         int(last["volume"])
     ]
 
-    sheet.append_row(row)
-    print("Updated:", symbol, row)
+    key = (symbol, date_value)
+
+    if key in existing_map:
+        row_number = existing_map[key]
+        sheet.update(f"A{row_number}:G{row_number}", [row])
+        print(f"Updated existing row: {symbol} {date_value}")
+    else:
+        sheet.append_row(row)
+        print(f"Appended new row: {symbol} {date_value}")
