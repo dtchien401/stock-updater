@@ -2,7 +2,9 @@ name: Update Stock Data
 
 on:
   schedule:
-    - cron: '0 9 * * *'
+    - cron: '16 2 * * *'
+    - cron: '31 4 * * *'
+    - cron: '1 8 * * *'
   workflow_dispatch:
 
 jobs:
